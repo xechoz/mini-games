@@ -44,6 +44,7 @@ Local build order:
 
 ```bash
 cd ../snake && npm run build
+cd ../ludo && npm run build
 cd ../mini-games && npm run site:local
 ```
 

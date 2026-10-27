@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.1
+
+- Publish Ludo `v0.1.0`.
+- Allow `SITE_LOCAL=1` to read a game manifest from the checkout when the
+  local `dist` came from a plain build.
+
 ## 4.0.0
 
 - Convert this repository into the site aggregator.
