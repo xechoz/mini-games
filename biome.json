@@ -1,16 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
   "files": {
-    "includes": [
-      "**",
-      "!**/node_modules",
-      "!**/dist",
-      "!**/*-poki",
-      "!release",
-      "!dist-site",
-      "!**/.opencode/skills",
-      "!todo"
-    ]
+    "includes": ["site/**", "!site/.cache", "!dist-site"]
   },
   "formatter": {
     "enabled": true,

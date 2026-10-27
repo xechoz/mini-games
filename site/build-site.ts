@@ -1,15 +1,19 @@
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { loadEnv } from 'vite'
 import { adsTxtLine, normalizeAdsenseClient } from './adsense.ts'
+
+interface GameConfig {
+  id: string
+  repo: string
+  version: string
+  /** Path to a local game checkout, used when SITE_LOCAL=1. */
+  local?: string
+}
+
+interface SiteConfig {
+  games: GameConfig[]
+}
 
 interface Manifest {
   id: string
@@ -20,39 +24,58 @@ interface Manifest {
   tags?: string[]
 }
 
-const root = resolve(import.meta.dirname, '..')
-const gamesDir = join(root, 'games')
+const siteDir = import.meta.dirname
+const root = resolve(siteDir, '..')
 const outDir = join(root, 'dist-site')
 const outGamesDir = join(outDir, 'games')
+const cacheDir = join(siteDir, '.cache')
+const localMode = process.env.SITE_LOCAL === '1'
 
 rmSync(outDir, { recursive: true, force: true })
 mkdirSync(outGamesDir, { recursive: true })
+mkdirSync(cacheDir, { recursive: true })
 
-const env = loadEnv('production', root, 'VITE_')
-const adChannel = process.env.VITE_AD_CHANNEL ?? env.VITE_AD_CHANNEL
-const adsenseClient = normalizeAdsenseClient(
-  process.env.VITE_ADSENSE_CLIENT ?? env.VITE_ADSENSE_CLIENT,
-)
-if (adChannel === 'h5games' && adsenseClient && !adsenseClient.includes('X')) {
-  writeFileSync(join(outDir, 'ads.txt'), `${adsTxtLine(adsenseClient)}\n`)
-  console.log(`ads.txt written for ${adsenseClient}`)
-}
-
+const config = JSON.parse(readFileSync(join(siteDir, 'games.json'), 'utf8')) as SiteConfig
 const manifests: Manifest[] = []
-for (const entry of readdirSync(gamesDir, { withFileTypes: true })) {
-  if (!entry.isDirectory()) continue
-  const manifestPath = join(gamesDir, entry.name, 'game.manifest.json')
-  if (!existsSync(manifestPath)) continue
-  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as Manifest
-  const dist = join(gamesDir, entry.name, 'dist')
-  if (!existsSync(dist)) {
-    console.warn(`skip ${entry.name}: dist not found (run npm run build:games first)`)
-    continue
+
+for (const game of config.games) {
+  const target = join(outGamesDir, game.id)
+
+  if (localMode) {
+    const gameRoot = resolve(root, game.local ?? join('..', game.id))
+    const dist = join(gameRoot, 'dist')
+    if (!existsSync(join(dist, 'index.html'))) {
+      throw new Error(
+        `[site] ${game.id}: ${dist}/index.html not found; run npm run build there first`,
+      )
+    }
+    cpSync(dist, target, { recursive: true })
+    const thumb = join(gameRoot, 'thumb.png')
+    if (existsSync(thumb)) cpSync(thumb, join(target, 'thumb.png'))
+  } else {
+    const zip = join(cacheDir, `${game.id}-web.zip`)
+    const url = `https://github.com/${game.repo}/releases/download/${game.version}/${game.id}-web.zip`
+    console.log(`[site] downloading ${url}`)
+    await download(url, zip)
+    rmSync(target, { recursive: true, force: true })
+    mkdirSync(target, { recursive: true })
+    execFileSync('unzip', ['-q', '-o', zip, '-d', target], { stdio: 'inherit' })
   }
-  cpSync(dist, join(outGamesDir, manifest.id), { recursive: true })
-  const thumb = join(gamesDir, entry.name, 'thumb.png')
-  if (existsSync(thumb)) cpSync(thumb, join(outGamesDir, manifest.id, 'thumb.png'))
+
+  if (!existsSync(join(target, 'index.html'))) {
+    throw new Error(`[site] ${game.id}: release asset has no index.html`)
+  }
+
+  const manifestPath = join(target, 'game.manifest.json')
+  if (!existsSync(manifestPath)) {
+    throw new Error(`[site] ${game.id}: game.manifest.json missing from build`)
+  }
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as Manifest
+  if (manifest.id !== game.id) {
+    throw new Error(`[site] ${game.id}: manifest id is ${manifest.id}`)
+  }
   manifests.push(manifest)
+  console.log(`[site] ready ${game.id} ${localMode ? '(local)' : game.version}`)
 }
 
 manifests.sort((a, b) => (a.order ?? 100) - (b.order ?? 100))
@@ -138,7 +161,21 @@ writeFileSync(
 )
 
 writeFileSync(join(outDir, 'games.json'), JSON.stringify(manifests, null, 2))
-console.log(`site built: ${manifests.length} game(s) -> ${outDir}`)
+
+const adsenseClient = normalizeAdsenseClient(process.env.VITE_ADSENSE_CLIENT)
+const adChannel = process.env.VITE_AD_CHANNEL
+if (adChannel === 'h5games' && adsenseClient && !adsenseClient.includes('X')) {
+  writeFileSync(join(outDir, 'ads.txt'), `${adsTxtLine(adsenseClient)}\n`)
+  console.log(`[site] ads.txt written for ${adsenseClient}`)
+}
+
+console.log(`[site] built ${manifests.length} game(s) -> ${outDir}`)
+
+async function download(url: string, dest: string): Promise<void> {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`[site] download failed ${response.status} ${url}`)
+  writeFileSync(dest, Buffer.from(await response.arrayBuffer()))
+}
 
 function escapeHtml(value: string): string {
   return value

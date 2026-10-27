@@ -1,35 +1,21 @@
 {
-  "name": "mini-games",
-  "version": "3.0.0",
+  "name": "mini-games-site",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.12"
+    "node": ">=24"
   },
-  "workspaces": [
-    "packages/*",
-    "games/*"
-  ],
   "scripts": {
-    "dev:snake": "npm run dev -w @mg/snake",
-    "build:snake": "npm run build -w @mg/snake",
-    "build:games": "npm run build --workspaces --if-present",
-    "package:snake:poki": "node tooling/package-game.ts snake poki",
-    "package:snake:crazy:basic": "node tooling/package-game.ts snake crazygames-basic",
-    "package:snake:crazy:full": "node tooling/package-game.ts snake crazygames-full",
-    "site": "npm run build:games && node tooling/build-site.ts",
-    "new:game": "node tooling/create-game.ts",
-    "stats": "node tooling/count-lines.ts",
+    "site": "node site/build-site.ts",
+    "site:local": "SITE_LOCAL=1 node site/build-site.ts",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && biome check . && node tooling/check-boundaries.ts",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "check": "npm run typecheck && biome check site",
+    "test": "node --test site/*.test.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.2",
     "@types/node": "^26.6.5",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.5",
-    "vitest": "^5.0.5"
+    "typescript": "^7.0.2"
   }
 }

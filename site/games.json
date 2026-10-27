@@ -1,0 +1,10 @@
+{
+  "games": [
+    {
+      "id": "snake",
+      "repo": "xechoz/snake",
+      "version": "v3.1.0",
+      "local": "../snake"
+    }
+  ]
+}

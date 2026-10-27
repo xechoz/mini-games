@@ -1,11 +1,22 @@
-name: CI
+name: Site
 
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  check:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -17,33 +28,20 @@ jobs:
       - run: npm run check
       - run: npm run test
       - run: npm run site
-      - uses: actions/upload-artifact@v7
+        env:
+          VITE_AD_CHANNEL: h5games
+          VITE_ADSENSE_CLIENT: ${{ vars.VITE_ADSENSE_CLIENT }}
+      - uses: actions/upload-pages-artifact@v5
         with:
-          name: dist-site
           path: dist-site
-          if-no-files-found: error
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: check
+    if: github.event_name != 'pull_request'
+    needs: build
     runs-on: ubuntu-latest
-    concurrency:
-      group: pages
-      cancel-in-progress: true
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: dist-site
-          path: dist-site
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist-site
       - id: deploy
         uses: actions/deploy-pages@v5
