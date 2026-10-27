@@ -5,6 +5,12 @@
       "repo": "xechoz/snake",
       "version": "v3.1.0",
       "local": "../snake"
+    },
+    {
+      "id": "ludo",
+      "repo": "xechoz/ludo",
+      "version": "v0.1.0",
+      "local": "../ludo"
     }
   ]
 }

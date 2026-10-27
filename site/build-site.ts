@@ -50,6 +50,10 @@ for (const game of config.games) {
       )
     }
     cpSync(dist, target, { recursive: true })
+    const localManifest = join(gameRoot, 'game.manifest.json')
+    if (!existsSync(join(target, 'game.manifest.json')) && existsSync(localManifest)) {
+      cpSync(localManifest, join(target, 'game.manifest.json'))
+    }
     const thumb = join(gameRoot, 'thumb.png')
     if (existsSync(thumb)) cpSync(thumb, join(target, 'thumb.png'))
   } else {
