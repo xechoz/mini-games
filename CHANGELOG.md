@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.1.0
+
+- Publish `xechoz/snake-endless` (Bloomtail: Endless) `v1.0.0`.
+- Update `xechoz/snake` to `v4.1.0`, now campaign-only.
+
 ## 4.0.1
 
 - Publish Ludo `v0.1.0`.

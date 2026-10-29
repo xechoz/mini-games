@@ -12,7 +12,8 @@ Live: https://xechoz.github.io/mini-games/
 | --- | --- |
 | `xechoz/mini-games` | This site: download releases, build `dist-site`, deploy Pages |
 | `xechoz/mg-platform` | Shared `@mg/core` / `@mg/platform` and tooling |
-| `xechoz/snake` | Fruit Snake: Color Trail |
+| `xechoz/snake` | Bloomtail: Color Trail (campaign) |
+| `xechoz/snake-endless` | Bloomtail: Endless |
 | `xechoz/ludo` | Ludo |
 
 A game release tag produces `<id>-web.zip`. The site never checks out game

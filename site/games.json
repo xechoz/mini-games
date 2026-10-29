@@ -3,8 +3,14 @@
     {
       "id": "snake",
       "repo": "xechoz/snake",
-      "version": "v3.1.0",
+      "version": "v4.1.0",
       "local": "../snake"
+    },
+    {
+      "id": "snake-endless",
+      "repo": "xechoz/snake-endless",
+      "version": "v1.0.0",
+      "local": "../snake-endless"
     },
     {
       "id": "ludo",
