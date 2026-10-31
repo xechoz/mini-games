@@ -17,6 +17,12 @@
       "repo": "xechoz/ludo",
       "version": "v0.1.0",
       "local": "../ludo"
+    },
+    {
+      "id": "animal-mall",
+      "repo": "xechoz/animal-mall",
+      "version": "v0.1.0",
+      "local": "../animal-mall"
     }
   ]
 }
